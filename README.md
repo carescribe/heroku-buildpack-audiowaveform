@@ -1,31 +1,42 @@
-Heroku buildpack: audiowaveform and lame
-=======================
+# Heroku buildpack: audiowaveform
 
+This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for using audiowaveform.
 
-This is a [Heroku buildpack](http://devcenter.heroku.com/articles/buildpacks) for using audiowaveform and lame in your project.  
-It doesn't do anything else, so to actually compile your app you should use [heroku-buildpack-multi](https://github.com/ddollar/heroku-buildpack-multi) to combine it with a real buildpack.
+## Lineage
 
-Lineage
--------
+Originally based on [Mattchewone/heroku-buildpack-audiowaveform](https://github.com/Mattchewone/heroku-buildpack-audiowaveform).
 
-Shamelessly forked from the [ffmpeg heroku buildpack](https://github.com/shunjikonishi/heroku-buildpack-ffmpeg) by [Shunji Konishi](https://github.com/shunjikonishi).
+## Compatibility
 
-Usage
------
-To use this buildpack, you should prepare a .buildpacks file that contains this buildpack url and your real buildpack url:
+Tested on the [Heroku-20 stack](https://devcenter.heroku.com/articles/heroku-20-stack).
 
-    $ ls
-    .buildpacks
-    ...
-    
-    $ cat .buildpacks
-    https://github.com/lepinsk/heroku-buildpack-audiowaveform
+## Dependencies
 
-    $ heroku create --buildpack https://github.com/ddollar/heroku-buildpack-multi
+We build and ship our own version of `audiowaveform`.
 
-    $ git push heroku master
-    ...
+Heroku must have the dependencies required installed. We do this using
+[heroku-buildpack-apt](https://github.com/heroku/heroku-buildpack-apt). The
+required dependencies are:
 
-You can verify that sox is installed by calling:
+    libmad0-dev
+    libid3tag0-dev
+    libsndfile1-dev
+    libgd-dev
 
-    $ heroku run "audiowaveform"
+Add them to `Aptfile` in the root of your application.
+
+## Building the `audiowaveform` binary
+
+Build the binary inside the Docker image
+
+    docker build . -f Dockerfile -t audiowaveform-builder
+
+Copy the built binary to /dist/
+
+    docker run -it -v (pwd)/dist/:/dist --rm audiowaveform-builder cp /build/audiowaveform-1.5.1/audiowaveform /dist/audiowaveform/bin/
+
+Create an archive
+
+    cd build/
+    tar -zcvf audiowaveform.tar.gz audiowaveform
+
